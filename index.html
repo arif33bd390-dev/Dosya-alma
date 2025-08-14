@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>arifbey208</title>
+<style>
+  :root { --green:#00ff66; }
+  html,body { margin:0; height:100%; background:#000; color:var(--green); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+  .wrap { min-height:100%; display:flex; align-items:center; justify-content:center; }
+  .term { width:min(900px, 92vw); padding:20px; border:1px solid #094; border-radius:12px; background:linear-gradient(180deg,#000 0%,#020 100%); box-shadow:0 0 30px rgba(0,255,120,.08) inset; }
+  .title { font-weight:700; letter-spacing:.5px; }
+  .muted { opacity:.85 }
+  .bar { height:22px; border:1px solid var(--green); background:#030; border-radius:6px; overflow:hidden; margin:10px 0 4px; }
+  .fill { height:100%; width:0%; background:var(--green); box-shadow:0 0 12px var(--green); transition:width .25s linear; }
+  .row { display:flex; justify-content:space-between; font-size:13px; opacity:.9 }
+  pre { margin:10px 0 0 0; white-space:pre-wrap; word-break:break-word; max-height:48vh; overflow:auto; }
+  .hint { font-size:12px; opacity:.6; margin-top:8px }
+  .hidden { display:none }
+  button { background:#062; color:var(--green); border:1px solid var(--green); border-radius:10px; padding:10px 14px; font-family:inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="term">
+    <div class="title">arifbey208</div>
+    <div class="muted">Veriler kopyalanıyor…</div>
+
+    <div class="bar"><div id="fill" class="fill"></div></div>
+    <div class="row"><span id="pct">0%</span><span>~30 sn</span></div>
+
+    <pre id="log"></pre>
+    <div id="fallback" class="hidden hint">
+      İşlem bitti. Tarayıcı otomatik dönemedi. <button id="backBtn">Geri dön</button>
+    </div>
+    <div class="hint">Tam ekran için: tarayıcı menüsü → Ana ekrana ekle (isteğe bağlı)</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const fill = document.getElementById('fill');
+  const pct  = document.getElementById('pct');
+  const log  = document.getElementById('log');
+  const fallback = document.getElementById('fallback');
+  const backBtn = document.getElementById('backBtn');
+
+  // 0→100 sayacı: 30 saniyede biter
+  let percent = 0;
+  const progressInterval = setInterval(()=>{
+    percent++;
+    fill.style.width = percent + '%';
+    pct.textContent = percent + '%';
+    if (percent >= 100) {
+      clearInterval(progressInterval);
+      startFakeCopy(); // sonraki aşama: 1 dakikalık sahte kopyalama
+    }
+  }, 300); // 300ms * 100 = 30s
+
+  function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+
+  function startFakeCopy(){
+    const start = Date.now();
+    const duration = 60 * 1000; // 1 dakika
+    const pathsA = ["user","media","android","system","storage","sdcard","Download","DCIM","WhatsApp","Telegram","Pictures","Movies","Music","Documents"];
+    const pathsB = ["data","cache","tmp","backups","exports","albums","camera","voices","stickers","notes","configs"];
+    const files  = ["img","vid","doc","msg","conf","db","cfg","apk","zip","pdf","key","token"];
+    const exts   = ["jpg","png","mp4","m4a","pdf","zip","db","txt","json","cfg","apk","heic","webp"];
+
+    // her 500ms'te bir "dosya" satırı üret
+    const step = 500;
+    const timer = setInterval(()=>{
+      const now = Date.now();
+      const p1 = randFrom(pathsA), p2 = randFrom(pathsB);
+      const fname = `${randFrom(files)}${String(Math.floor(Math.random()*9999)).padStart(4,'0')}.${randFrom(exts)}`;
+      const size = (Math.random()*90 + 10).toFixed(1) + " MB";
+      const speed = (Math.random()*40 + 5).toFixed(1) + " MB/sn";
+      log.textContent += `\nKopyalanıyor: /${p1}/${p2}/${fname}  (${size})  hız: ${speed}`;
+      log.scrollTop = log.scrollHeight;
+
+      if (now - start >= duration){
+        clearInterval(timer);
+        endAndReturn();
+      }
+    }, step);
+  }
+
+  function endAndReturn(){
+    // Küçük bir bitti mesajı log'a düşelim (gösterişli ama kısa)
+    log.textContent += "\n\nİşlem tamamlandı.";
+    // 800ms bekle, sonra geri dönmeyi dene
+    setTimeout(()=>{
+      let navigated = false;
+      try {
+        if (window.history.length > 1) {
+          history.back();
+          navigated = true;
+        } else if (document.referrer) {
+          location.replace(document.referrer);
+          navigated = true;
+        } else {
+          // bazı tarayıcılar window.close'a izin vermez
+          window.close();
+        }
+      } catch(e){}
+
+      // Eğer 1 sn içinde sayfa değişmediyse, manuel geri butonunu göster
+      setTimeout(()=>{
+        if (!navigated) {
+          fallback.classList.remove('hidden');
+        }
+      }, 1000);
+    }, 800);
+  }
+
+  backBtn?.addEventListener('click', ()=> history.back());
+})();
+</script>
+</body>
+</html>
